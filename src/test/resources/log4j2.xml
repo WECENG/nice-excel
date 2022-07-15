@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+
+    <Appenders>
+        <Console name="stdout" target="SYSTEM_OUT">
+            <PatternLayout pattern="[org.nice.excel] %d{yyy-MM-dd HH:mm:ss} [%t] %-5p %c %x - %m%n"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <Root level="debug">
+            <AppenderRef ref="stdout"/>
+        </Root>
+    </Loggers>
+
+</Configuration>
