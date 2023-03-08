@@ -40,4 +40,10 @@ public @interface ExcelMerge {
      */
     int colEnd() default -1;
 
+    /**
+     * 纵向分组
+     */
+    boolean colGroup() default false;
+
+
 }

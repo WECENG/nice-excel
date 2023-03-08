@@ -18,4 +18,9 @@ public @interface ExcelGroup {
      * 分组属性
      */
     String[] fields();
+
+    /**
+     * 填充单元各合并
+     */
+    boolean fill() default false;
 }

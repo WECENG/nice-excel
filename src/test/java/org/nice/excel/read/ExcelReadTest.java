@@ -5,6 +5,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.nice.excel.listener.*;
 import org.nice.excel.model.*;
+import org.nice.excel.model.ColGroupMerge;
 
 import java.io.InputStream;
 
@@ -80,6 +81,20 @@ public class ExcelReadTest {
         EasyExcel.read(is, SortExcel.class, new CustomModelEventListener())
                 .useDefaultListener(false)
                 .registerReadListener(new SortExcelListener())
+                .sheet()
+                .doRead();
+    }
+
+    /**
+     * 日前断面阻塞
+     */
+    @Test
+    @DisplayName("分组后合并")
+    public void sectionBlockTest() {
+        InputStream is = this.getClass().getClassLoader().getResourceAsStream("dir/colGroupMerge.xlsx");
+        EasyExcel.read(is, ColGroupMerge.class, new CustomModelEventListener())
+                .useDefaultListener(false)
+                .registerReadListener(new ColGroupMergeListener())
                 .sheet()
                 .doRead();
     }

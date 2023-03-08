@@ -44,7 +44,22 @@ public class ConvertUtil {
      */
     public static List<Object> matchData(List<Integer> idxList, List<Object> allData) {
         List<Object> dataList = new ArrayList<>();
-        idxList.forEach(idx -> dataList.add(allData.get(idx)));
+        int size = allData.stream()
+                .filter(item -> item instanceof List)
+                .map(item -> (List<?>) item)
+                .map(List::size).min(Integer::compareTo)
+                .orElse(1);
+        for (int i = 0; i < size; i++) {
+            for (Integer idx : idxList) {
+                Object val = allData.get(idx);
+                if (val instanceof List) {
+                    List<?> rowList = (List<?>) val;
+                    dataList.add(rowList.get(i));
+                } else {
+                    dataList.add(val);
+                }
+            }
+        }
         return dataList;
     }
 
@@ -78,6 +93,25 @@ public class ConvertUtil {
             resultList.add(list1.get(i) + list2.get(i));
         }
         return resultList;
+    }
+
+
+    /**
+     * 用前一个element填充为null的element
+     *
+     * @param list 待处理集合
+     */
+    public static void fillPreNullable(List<Object> list) {
+        ListIterator<Object> iterator = list.listIterator();
+        Object prev = null;
+        while (iterator.hasNext()) {
+            Object current = iterator.next();
+            if (current == null) {
+                iterator.set(prev);
+            } else {
+                prev = current;
+            }
+        }
     }
 
 }

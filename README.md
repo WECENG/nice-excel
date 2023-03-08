@@ -88,812 +88,912 @@ com.tsintergy.pps.excel.SheetFunction      // 指定sheet名称的接口函数
 
 ### 使用示例
 
-1. #### 普通逐行读取
+#### 普通逐行读取
 
-   1. excel模板样例
+1. excel模板样例
 
-      ![normal-excel-template](doc/img/normal-excel-template.png)
+   ![normal-excel-template](doc/img/normal-excel-template.png)
 
-   2. 定义目标模型类
+2. 定义目标模型类
 
-      ```java
-      package org.nice.excel.model;
-      
-      import lombok.Data;
-      import lombok.NoArgsConstructor;
-      
-      import java.math.BigDecimal;
-      
-      /**
-       * <p>
-       * 基础excel模板
-       * </p>
-       *
-       * @author WECENG
-       * @since 2021/7/5 16:08
-       */
-      @Data
-      @NoArgsConstructor
-      public class BasicExcel {
-      
-      //    @ExcelProperty(index = 0,converter = AutoConverter.class)   默认从第一列开始
-          private String str;
-      
-          private BigDecimal number;
-      
-      }
-      
-      
-      ```
-      
-   3. 定义监听器
+   ```java
+   package org.nice.excel.model;
    
-      ```java
-      package org.nice.excel.listener;
-      
-      import com.alibaba.excel.context.AnalysisContext;
-      import com.alibaba.excel.metadata.CellData;
-      import org.nice.excel.model.BasicExcel;
-      import org.slf4j.Logger;
-      import org.slf4j.LoggerFactory;
-      
-      import java.util.Map;
-      
-      import static org.junit.jupiter.api.Assertions.assertNotNull;
-      
-      /**
-       * <p>
-       * 基础excel监听器
-       * </p>
-       *
-       * @author WECENG
-       * @since 2021/7/5 16:11
-       */
-      public class BasicExcelListener extends TypeMappingListener<BasicExcel> {
-      
-          private final Logger log = LoggerFactory.getLogger(this.getClass());
-      
-          @Override
-          public void doInvoke(BasicExcel basicExcel, AnalysisContext context, Map<?,?> customMap) {
-              log.info("成功解析: {}", basicExcel);
-              assertNotNull(basicExcel.getNumber());
-              assertNotNull(basicExcel.getStr());
-          }
-      
-          @Override
-          public void invokeHead(Map<Integer, CellData> headMap, AnalysisContext context) {
-      
-          }
-      
-          @Override
-          public void post(AnalysisContext context, Map<?, ?> customMap) {
-      
-          }
-      }
-      
-      ```
+   import lombok.Data;
+   import lombok.NoArgsConstructor;
    
-      该监听器需要绑定上面定义的目标模型，其中`TypeMappingListener`抽象监听器，会**自动过滤不属于该泛型类型的结果**。
+   import java.math.BigDecimal;
    
-   4. 处理解析结果
+   /**
+    * <p>
+    * 基础excel模板
+    * </p>
+    *
+    * @author WECENG
+    * @since 2021/7/5 16:08
+    */
+   @Data
+   @NoArgsConstructor
+   public class BasicExcel {
    
-      完成上述的`doInvoke`方法，处理最终的excel解析结果。
+   //    @ExcelProperty(index = 0,converter = AutoConverter.class)   默认从第一列开始
+       private String str;
    
-2. #### 横向合并
-
-   1. excel模板样例
-
-      ![horizontal-excel-template](doc/img/row-merge-template.png)
-
-   2. 定义目标模型类
-
-      ```java
-      package org.nice.excel.model;
-      
-      import com.alibaba.excel.annotation.ExcelProperty;
-      import com.alibaba.excel.annotation.format.DateTimeFormat;
-      import lombok.Data;
-      import lombok.NoArgsConstructor;
-      import org.nice.excel.annotation.ExcelMerge;
-      import org.nice.excel.annotation.ExcelSort;
-      import org.nice.excel.converter.BigDecimalStringNumberConverter;
-      import org.nice.excel.enums.MergeEnum;
-      
-      import java.math.BigDecimal;
-      import java.util.Date;
-      import java.util.List;
-      
-      /**
-       * <p>
-       * 按行合并excel
-       * </p>
-       *
-       * @author WECENG
-       * @since 2021/7/5 10:28
-       */
-      @Data
-      @NoArgsConstructor
-      public class RowMergeExcel {
-      
-          @DateTimeFormat("yyyy-MM-dd")
-          @ExcelProperty(index = 0)
-          private Date date;
-      
-          @ExcelMerge(type = MergeEnum.ROW, rowStart = 1, rowEnd = 97)
-          @ExcelProperty(index = 2, converter = BigDecimalStringNumberConverter.class)
-          @ExcelSort(colIdx = 1)
-          private List<BigDecimal> dataList;
-      
-      }
-      
-      ```
-
-      横向合并需要使用`@ExcelMerge`注解，**类型type为`MergeEnum.ROW`，同时需要指定合并的开始行数（rowStart）和结束行数（rowEnd）,其中rowEnd是非必填的，如果不填则合并至最后一行**。同时如果使用合并，则需要**显示指定转换器**，例如：`BigDecimalStringNumberConvertor`，**不可用默认转换器。**
-
-   3. 定义监听器
-
-      ```java
-      package org.nice.excel.listener;
-      
-      import cn.hutool.core.date.DateUtil;
-      import com.alibaba.excel.context.AnalysisContext;
-      import com.alibaba.excel.metadata.CellData;
-      import org.nice.excel.model.RowMergeExcel;
-      import org.slf4j.Logger;
-      import org.slf4j.LoggerFactory;
-      
-      import java.math.BigDecimal;
-      import java.util.Map;
-      
-      import static org.junit.jupiter.api.Assertions.assertEquals;
-      import static org.junit.jupiter.api.Assertions.assertTrue;
-      
-      /**
-       * <p>
-       * 按行合并excel监听器
-       * </p>
-       *
-       * @author WECENG
-       * @since 2021/7/5 10:35
-       */
-      public class RowMergeExcelListener extends TypeMappingListener<RowMergeExcel> {
-      
-          private final Logger log = LoggerFactory.getLogger(this.getClass());
-      
-          @Override
-          public void doInvoke(RowMergeExcel rowMergeExcel, AnalysisContext context, Map<?,?> customMap) {
-              log.info("成功解析: {}", rowMergeExcel);
-              assertTrue(DateUtil.isSameDay(rowMergeExcel.getDate(), DateUtil.parse("2021-04-26", "yyyy-MM-dd")));
-              assertEquals(96, rowMergeExcel.getDataList().size());
-              //assert sort
-              assertEquals(rowMergeExcel.getDataList().get(0), BigDecimal.valueOf(1536.36));
-          }
-      
-          @Override
-          public void invokeHead(Map<Integer, CellData> headMap, AnalysisContext context) {
-      
-          }
-      
-          @Override
-          public void post(AnalysisContext context, Map<?, ?> customMap) {
-      
-          }
-      }
-      
-      ```
-
-      该监听器需要绑定上面定义的目标模型，其中`TypeMappingListener`抽象监听器，会**自动过滤不属于该泛型类型的结果**。
-
-   4. 处理解析结果
-
-      完成上述的`doInvoke`方法，处理最终的excel解析结果。
-
-3. #### 纵向合并
-
-   1. excel模板样例
-
-      ![vertical-excel-template](doc/img/col-merge-template.png)
-
-   2. 定义目标模型类
-
-      ```java
-      package org.nice.excel.model;
-      
-      import com.alibaba.excel.annotation.ExcelProperty;
-      import lombok.Data;
-      import lombok.NoArgsConstructor;
-      import org.nice.excel.annotation.ExcelMerge;
-      import org.nice.excel.converter.BigDecimalStringNumberConverter;
-      import org.nice.excel.enums.MergeEnum;
-      
-      import java.math.BigDecimal;
-      import java.util.List;
-      
-      /**
-       * <p>
-       * 按列合并excel
-       * </p>
-       *
-       * @author WECENG
-       * @since 2021/7/20 10:37
-       */
-      @Data
-      @NoArgsConstructor
-      public class ColMergeExcel {
-      
-          private String name;
-      
-          @ExcelProperty(converter = BigDecimalStringNumberConverter.class)
-          @ExcelMerge(type = MergeEnum.COL, colStart = 1, colEnd = 97)
-          private List<BigDecimal> dataList;
-      
-      }
-      ```
-      
-      横向合并需要使用`@ExcelMerge`注解，**类型type为`MergeEnum.COL`，同时需要指定合并的开始列数（colStart）和结束列数（colEnd）**。同时如果使用合并，则需要**显示指定转换器**，例如：`BigDecimalStringNumberConvertor`，**不可用默认转换器**。
-      
-   3. 定义监听器
+       private BigDecimal number;
    
-      ```java
-      package org.nice.excel.listener;
-      
-      import com.alibaba.excel.context.AnalysisContext;
-      import com.alibaba.excel.metadata.CellData;
-      import org.nice.excel.model.ColMergeExcel;
-      import org.slf4j.Logger;
-      import org.slf4j.LoggerFactory;
-      
-      import java.util.Map;
-      
-      import static org.junit.jupiter.api.Assertions.assertEquals;
-      
-      /**
-       * <p>
-       * 按列合并excel监听器
-       * </p>
-       *
-       * @author WECENG
-       * @since 2022/7/15 10:25
-       */
-      public class ColMergeExcelListener extends TypeMappingListener<ColMergeExcel>{
-      
-          private final Logger log = LoggerFactory.getLogger(this.getClass());
-      
-          @Override
-          public void doInvoke(ColMergeExcel colMergeExcel, AnalysisContext context, Map<?, ?> customMap) {
-              log.info("成功解析: {}", colMergeExcel);
-              assertEquals(96, colMergeExcel.getDataList().size());
-          }
-      
-          @Override
-          public void invokeHead(Map<Integer, CellData> headMap, AnalysisContext context) {
-          }
-      
-          @Override
-          public void post(AnalysisContext context, Map<?, ?> customMap) {
-      
-          }
-      
-      }
-      ```
-      
-      该监听器需要绑定上面定义的目标模型，其中`TypeMappingListener`抽象监听器，会**自动过滤不属于该泛型类型的结果**。
-      
-   4. 处理解析结果
+   }
    
-      完成上述的`doInvoke`方法，处理最终的excel解析结果。
    
-4. #### 横纵双向合并
-
-   1. excel模板样例
-
-      ![vertical-excel-template](doc/img/row-col-merge-template.png)
-
-   2. 定义目标模型类
-
-      ```java
-      package org.nice.excel.model;
-      
-      import com.alibaba.excel.annotation.ExcelProperty;
-      import lombok.Data;
-      import lombok.NoArgsConstructor;
-      import org.nice.excel.annotation.ExcelMerge;
-      import org.nice.excel.converter.BigDecimalStringNumberConverter;
-      import org.nice.excel.enums.MergeEnum;
-      
-      import java.math.BigDecimal;
-      import java.util.List;
-      
-      /**
-       * <p>
-       * 行列合并excel
-       * </p>
-       *
-       * @author WECENG
-       * @since 2021/7/5 16:32
-       */
-      @Data
-      @NoArgsConstructor
-      public class RowColMergeExcel {
-      
-          @ExcelProperty(converter = BigDecimalStringNumberConverter.class)
-          @ExcelMerge(type = MergeEnum.ROW_COL, rowStart = 1, rowEnd = 5, colStart = 1, colEnd = 25)
-          private List<BigDecimal> dataList;
-      
-      }
-      
-      ```
-
-      横向合并需要使用`@ExcelMerge`注解，**类型type为MergeEnum.ROW_COL，同时需要指定合并的开始行数（rowStart）、结束行数（rowEnd）、开始列数（colStart）和结束列数（colEnd）**。同时如果使用合并，则需要**显示指定转换器**，例如：`BigDecimalStringNumberConvertor`，**不可用默认转换器**。
-
-   3. 定义监听器
-
-      ```java
-      package org.nice.excel.listener;
-      
-      import com.alibaba.excel.context.AnalysisContext;
-      import com.alibaba.excel.metadata.CellData;
-      import org.nice.excel.model.RowColMergeExcel;
-      import org.slf4j.Logger;
-      import org.slf4j.LoggerFactory;
-      
-      import java.util.Map;
-      
-      import static org.junit.jupiter.api.Assertions.assertEquals;
-      import static org.junit.jupiter.api.Assertions.assertNotNull;
-      
-      /**
-       * <p>
-       * 行列合并excel监听器
-       * </p>
-       *
-       * @author WECENG
-       * @since 2021/7/5 16:35
-       */
-      public class RowColMergeExcelListener extends TypeMappingListener<RowColMergeExcel> {
-      
-          private final Logger log = LoggerFactory.getLogger(this.getClass());
-      
-          @Override
-          public void doInvoke(RowColMergeExcel rowColMergeExcel, AnalysisContext context, Map<?,?> customMap) {
-              log.info("成功解析: {}", rowColMergeExcel);
-              assertNotNull(rowColMergeExcel);
-              assertEquals(rowColMergeExcel.getDataList().size(), 96);
-          }
-      
-          @Override
-          public void invokeHead(Map<Integer, CellData> headMap, AnalysisContext context) {
-      
-          }
-      
-          @Override
-          public void post(AnalysisContext context, Map<?, ?> customMap) {
-      
-          }
-      }
-      ```
-
-      该监听器需要绑定上面定义的目标模型，其中`TypeMappingListener`抽象监听器，会**自动过滤不属于该泛型类型的结果**。
-
-   4. 处理解析结果
-
-      完成上述的`doInvoke`方法，处理最终的excel解析结果。
-
-5. #### 多字段分组
-
-   1. excel模板样例
-
-      ![group-by-excel-template](doc/img/group-by-excel-template.png)
-
-   2. 定义目标模型类
-
-      ```java
-      package org.nice.excel.model;
-      
-      import com.alibaba.excel.annotation.ExcelProperty;
-      import com.alibaba.excel.annotation.format.DateTimeFormat;
-      import com.alibaba.excel.converters.string.StringStringConverter;
-      import lombok.Data;
-      import lombok.NoArgsConstructor;
-      import org.nice.excel.annotation.ExcelGroup;
-      import org.nice.excel.annotation.ExcelMerge;
-      import org.nice.excel.annotation.ExcelSort;
-      import org.nice.excel.converter.BigDecimalStringNumberConverter;
-      import org.nice.excel.enums.MergeEnum;
-      
-      import java.math.BigDecimal;
-      import java.util.Date;
-      import java.util.List;
-      
-      /**
-       * <p>
-       * 分组excel
-       * </p>
-       *
-       * @author WECENG
-       * @since 2021/7/5 14:23
-       */
-      @Data
-      @NoArgsConstructor
-      @ExcelGroup(fields = {"group1", "group2", "group3"})
-      public class GroupByExcel {
-      
-          @ExcelMerge(type = MergeEnum.ROW, rowStart = 1)
-          @ExcelProperty(index = 0)
-          private String group1;
-      
-          @ExcelProperty(index = 1)
-          @ExcelMerge(type = MergeEnum.ROW, rowStart = 1)
-          private String group2;
-      
-          @ExcelProperty(index = 2)
-          @DateTimeFormat("yyyy-MM-dd")
-          @ExcelMerge(type = MergeEnum.ROW, rowStart = 1)
-          private Date group3;
-      
-          @ExcelProperty(index = 4, converter = BigDecimalStringNumberConverter.class)
-          @ExcelMerge(type = MergeEnum.ROW, rowStart = 1)
-          private List<BigDecimal> dataList;
-      
-      }
-      ```
-
-      **分组需要使用`@ExcelGroup`注解，并指定分组字段。该指定的分组字段必须使用`@ExcelMerge`注解，明确需要使用哪些行数进行分组。**类型type为`MergeEnum.ROW`，同时需要指定合并的开始行数（rowStart）和结束行数（rowEnd）,其中rowEnd是非必填的，如果不填则合并至最后一行。同时如果使用合并，则需要显示指定转换器，例如：`BigDecimalStringNumberConvertor`，**不可用默认转换器**。
-
-   3. 定义监听器
+   ```
    
-      ```java
-      package org.nice.excel.listener;
-      
-      import com.alibaba.excel.context.AnalysisContext;
-      import com.alibaba.excel.metadata.CellData;
-      import org.assertj.core.util.Lists;
-      import org.nice.excel.model.GroupByExcel;
-      import org.slf4j.Logger;
-      import org.slf4j.LoggerFactory;
-      
-      import java.util.List;
-      import java.util.Map;
-      import java.util.stream.Collectors;
-      
-      import static org.junit.jupiter.api.Assertions.assertEquals;
-      import static org.junit.jupiter.api.Assertions.assertIterableEquals;
-      
-      /**
-       * <p>
-       * 分组excel监听器
-       * </p>
-       *
-       * @author WECENG
-       * @since 2021/7/5 14:45
-       */
-      public class GroupByExcelListener extends TypeMappingListener<List<GroupByExcel>> {
-      
-          private final Logger log = LoggerFactory.getLogger(this.getClass());
-      
-          @Override
-          public void doInvoke(List<GroupByExcel> groupByExcels, AnalysisContext context, Map<?, ?> customMap) {
-              log.info("成功解析: {}", groupByExcels);
-              assertEquals(8, groupByExcels.size());
-              assertIterableEquals(Lists.list(2, 2, 2, 2, 2, 2, 2, 2),
-                      groupByExcels.stream().map(GroupByExcel::getDataList).map(List::size).collect(Collectors.toList()));
-          }
-      
-          @Override
-          public void invokeHead(Map<Integer, CellData> headMap, AnalysisContext context) {
-      
-          }
-      
-          @Override
-          public void post(AnalysisContext context, Map<?, ?> customMap) {
-      
-          }
-      }
-      ```
-   
-      该监听器需要绑定上面定义的目标模型，其中`TypeMappingListener`抽象监听器，会**自动过滤不属于该泛型类型的结果**。
-   
-      **注意：分组后的接收结果数据，必须是List。例如：List<DataBootOff>**
-   
-   4. 处理解析结果
-   
-      完成上述的`doInvoke`方法，处理最终的excel解析结果。
-   
-6. #### 排序
+3. 定义监听器
 
-   1. 1. excel模板样例
-
-         ![group-by-excel-template](doc/img/sort.png)
-
-      2. 定义目标模型类
-
-         ```java
-         package org.nice.excel.model;
-         
-         import com.alibaba.excel.annotation.ExcelProperty;
-         import com.alibaba.excel.annotation.format.DateTimeFormat;
-         import lombok.Data;
-         import lombok.NoArgsConstructor;
-         import org.nice.excel.annotation.ExcelMerge;
-         import org.nice.excel.annotation.ExcelSort;
-         import org.nice.excel.converter.BigDecimalStringNumberConverter;
-         import org.nice.excel.enums.MergeEnum;
-         
-         import java.math.BigDecimal;
-         import java.util.Date;
-         import java.util.List;
-         
-         /**
-          * <p>
-          * 按行合并excel
-          * </p>
-          *
-          * @author WECENG
-          * @since 2021/7/5 10:28
-          */
-         @Data
-         @NoArgsConstructor
-         public class SortExcel {
-         
-             @DateTimeFormat("yyyy-MM-dd")
-             @ExcelProperty(index = 0)
-             private Date date;
-         
-             @ExcelMerge(type = MergeEnum.ROW, rowStart = 1, rowEnd = 97)
-             @ExcelProperty(index = 2, converter = BigDecimalStringNumberConverter.class)
-             @ExcelSort(colIdx = 1)
-             private List<BigDecimal> dataList;
-         
-         }
-         ```
-         
-         **排序需要使用`@ExcelSort注解`**，属性`colIdx`指定按照某一列的顺序进行排序。例如`colIdx=1`，即按照第二列（时间）的顺序对第三列（出力）进行排序。最终（出力）列的顺序会对应（时间）列从`00:15-24:00`的顺序排序。
-         
-      3. 定义监听器
-      
-         ```java
-         package org.nice.excel.listener;
-         
-         import cn.hutool.core.date.DateUtil;
-         import com.alibaba.excel.context.AnalysisContext;
-         import com.alibaba.excel.metadata.CellData;
-         import org.nice.excel.model.RowMergeExcel;
-         import org.slf4j.Logger;
-         import org.slf4j.LoggerFactory;
-         
-         import java.math.BigDecimal;
-         import java.util.Map;
-         
-         import static org.junit.jupiter.api.Assertions.assertEquals;
-         import static org.junit.jupiter.api.Assertions.assertTrue;
-         
-         /**
-          * <p>
-          * 按行合并excel监听器
-          * </p>
-          *
-          * @author WECENG
-          * @since 2021/7/5 10:35
-          */
-         public class RowMergeExcelListener extends TypeMappingListener<RowMergeExcel> {
-         
-             private final Logger log = LoggerFactory.getLogger(this.getClass());
-         
-             @Override
-             public void doInvoke(RowMergeExcel rowMergeExcel, AnalysisContext context, Map<?,?> customMap) {
-                 log.info("成功解析: {}", rowMergeExcel);
-                 assertTrue(DateUtil.isSameDay(rowMergeExcel.getDate(), DateUtil.parse("2021-04-26", "yyyy-MM-dd")));
-                 assertEquals(96, rowMergeExcel.getDataList().size());
-                 //assert sort
-                 assertEquals(rowMergeExcel.getDataList().get(0), BigDecimal.valueOf(1536.36));
-             }
-         
-             @Override
-             public void invokeHead(Map<Integer, CellData> headMap, AnalysisContext context) {
-         
-             }
-         
-             @Override
-             public void post(AnalysisContext context, Map<?, ?> customMap) {
-         
-             }
-         }
-      
-      ​    该监听器需要绑定上面定义的目标模型，其中`TypeMappingListener`抽象监听器，会**自动过滤不属于该泛型类型的结果**。
-      
-      4. 处理解析结果
+   ```java
+   package org.nice.excel.listener;
    
-   ​			完成上述的`doInvoke`方法，处理最终的excel解析结果。
+   import com.alibaba.excel.context.AnalysisContext;
+   import com.alibaba.excel.metadata.CellData;
+   import org.nice.excel.model.BasicExcel;
+   import org.slf4j.Logger;
+   import org.slf4j.LoggerFactory;
    
-5. #### processor使用
-
-   ​	`ExcelProcessor`接口提供了两个实现类`DefaultExcelProcessor`和`CompressExcelProcessor`，其中`DefaultExcelProcessor`为默认excel文件处理器，`CompressExcelProcessor`为压缩包的excel文件处理器，可处理的文件格式包括:**xls**、**xlsx**、**zip**、**rar(旧版)** 。
-
-   1. `ExcelProcessor`接口方法列表
-
-      ```java
-      package com.tsintergy.pps.excel;
-      
-      import com.alibaba.excel.context.AnalysisContext;
-      import com.alibaba.excel.event.AnalysisEventListener;
-      import com.alibaba.excel.read.listener.ReadListener;
-      import com.tsintergy.pps.excel.listener.TypeMappingListener;
-      
-      import java.io.InputStream;
-      import java.util.List;
-      import java.util.Map;
-      
-      /**
-       * <p>
-       * excel处理器
-       * </p>
-       *
-       * @author WECENG
-       * @since 2021/7/6 11:02
-       */
-      public interface ExcelProcessor {
-      
-          /**
-           * excel解析
-           *
-           * @param in           io stream
-           * @param target       目标模型
-           * @param listenerList 结果监听器集合
-           * @see com.tsintergy.pps.excel.listener.TypeMappingListener
-           */
-          void execute(InputStream in, Class<?> target, List<TypeMappingListener<?>> listenerList);
-      
-          /**
-           * excel解析
-           *
-           * @param in           io stream
-           * @param target       目标模型
-           * @param listenerList 监听器集合
-           * @param customMap    This object can be read in the Listener {@link AnalysisEventListener#invoke(Object, AnalysisContext)}
-           *                     {@link AnalysisContext#getCustom()}
-           * @see com.tsintergy.pps.excel.listener.TypeMappingListener
-           */
-          void execute(InputStream in, Class<?> target, List<TypeMappingListener<?>> listenerList, Map<Object, Object> customMap);
-      
-          /**
-           * excel解析
-           *
-           * @param in       io stream
-           * @param target   目标模型
-           * @param listener 结果监听器
-           */
-          void execute(InputStream in, Class<?> target, ReadListener<?> listener);
-      
-          /**
-           * excel解析
-           *
-           * @param in        io stream
-           * @param target    目标模型
-           * @param listener  结果监听器
-           * @param customMap This object can be read in the Listener {@link AnalysisEventListener#invoke(Object, AnalysisContext)}
-           *                  {@link AnalysisContext#getCustom()}
-           */
-          void execute(InputStream in, Class<?> target, ReadListener<?> listener, Map<Object, Object> customMap);
-      
-          /**
-           * excel解析
-           *
-           * @param in        io stream
-           * @param target    目标模型
-           * @param listener  结果监听器
-           * @param customMap This object can be read in the Listener {@link AnalysisEventListener#invoke(Object, AnalysisContext)}
-           *                  {@link AnalysisContext#getCustom()}
-           * @param sheetName sheet名称
-           */
-          void execute(InputStream in, Class<?> target, ReadListener<?> listener, Map<Object, Object> customMap, String sheetName);
-      
-          /**
-           * excel解析
-           *
-           * @param in        io stream
-           * @param target    目标模型
-           * @param listener  结果监听器
-           * @param customMap This object can be read in the Listener {@link AnalysisEventListener#invoke(Object, AnalysisContext)}
-           *                  {@link AnalysisContext#getCustom()}
-           * @param sheetName sheet名称
-           * @param rowNum 总行数
-           */
-          void execute(InputStream in, Class<?> target, ReadListener<?> listener, Map<Object, Object> customMap, String sheetName, Integer rowNum);
-      
-          /**
-           * excel解析
-           *
-           * @param fileName      文件名称
-           * @param in            io stream
-           * @param modelFunction 获取目标模型
-           * @param listenerList  结果监听器集合
-           * @see com.tsintergy.pps.excel.listener.TypeMappingListener
-           */
-          void execute(String fileName, InputStream in, ModelFunction modelFunction, List<TypeMappingListener<?>> listenerList);
-      
-          /**
-           * excel解析
-           *
-           * @param fileName      文件名称
-           * @param in            io stream
-           * @param modelFunction 获取目标模型
-           * @param listenerList  监听器集合
-           * @param customMap     This object can be read in the Listener {@link AnalysisEventListener#invoke(Object, AnalysisContext)}
-           *                      {@link AnalysisContext#getCustom()}
-           * @see com.tsintergy.pps.excel.listener.TypeMappingListener
-           */
-          void execute(String fileName, InputStream in, ModelFunction modelFunction, List<TypeMappingListener<?>> listenerList, Map<Object, Object> customMap);
-      
-          /**
-           * excel解析
-           *
-           * @param fileName         文件名称
-           * @param in               io stream
-           * @param modelFunction    目标模型
-           * @param listenerFunction 结果监听器
-           */
-          void execute(String fileName, InputStream in, ModelFunction modelFunction, ListenerFunction listenerFunction);
-      
-          /**
-           * excel解析
-           *
-           * @param fileName         文件名称
-           * @param in               io stream
-           * @param modelFunction    目标模型
-           * @param listenerFunction 结果监听器
-           * @param customMap        This object can be read in the Listener {@link AnalysisEventListener#invoke(Object, AnalysisContext)}
-           *                         {@link AnalysisContext#getCustom()}
-           */
-          void execute(String fileName, InputStream in, ModelFunction modelFunction, ListenerFunction listenerFunction, Map<Object, Object> customMap);
-      
-          /**
-           * excel解析
-           *
-           * @param fileName         文件名称
-           * @param in               io stream
-           * @param modelFunction    目标模型
-           * @param listenerFunction 结果监听器
-           * @param customFunction   自定义解析
-           * @param customMap        This object can be read in the Listener {@link AnalysisEventListener#invoke(Object, AnalysisContext)}
-           *                         {@link AnalysisContext#getCustom()}
-           */
-          void execute(String fileName, InputStream in, ModelFunction modelFunction, ListenerFunction listenerFunction, CustomFunction customFunction, Map<Object, Object> customMap);
-      
-          /**
-           * excel解析
-           *
-           * @param fileName         文件名称
-           * @param in               io stream
-           * @param modelFunction    目标模型
-           * @param listenerFunction 结果监听器
-           * @param customFunction   自定义解析
-           * @param sheetFunction    sheet名称解析
-           * @param customMap        This object can be read in the Listener {@link AnalysisEventListener#invoke(Object, AnalysisContext)}
-           *                         {@link AnalysisContext#getCustom()}
-           */
-          void execute(String fileName, InputStream in, ModelFunction modelFunction, ListenerFunction listenerFunction, SheetFunction sheetFunction, CustomFunction customFunction, Map<Object, Object> customMap);
-      
-      
-          /**
-           * excel解析
-           *
-           * @param fileName         文件名称
-           * @param in               io stream
-           * @param modelFunction    目标模型
-           * @param listenerFunction 结果监听器
-           * @param sheetFunction    sheet名称解析
-           * @param rowNumFunction   总行数解析
-           * @param customFunction   自定义解析
-           * @param customMap        This object can be read in the Listener {@link AnalysisEventListener#invoke(Object, AnalysisContext)}
-           *                         {@link AnalysisContext#getCustom()}
-           */
-          void execute(String fileName, InputStream in, ModelFunction modelFunction, ListenerFunction listenerFunction, SheetFunction sheetFunction, RowNumFunction rowNumFunction, CustomFunction customFunction, Map<Object, Object> customMap);
-      
-      }
-      
-      ```
+   import java.util.Map;
    
-   2. 使用示例
+   import static org.junit.jupiter.api.Assertions.assertNotNull;
+   
+   /**
+    * <p>
+    * 基础excel监听器
+    * </p>
+    *
+    * @author WECENG
+    * @since 2021/7/5 16:11
+    */
+   public class BasicExcelListener extends TypeMappingListener<BasicExcel> {
+   
+       private final Logger log = LoggerFactory.getLogger(this.getClass());
+   
+       @Override
+       public void doInvoke(BasicExcel basicExcel, AnalysisContext context, Map<?,?> customMap) {
+           log.info("成功解析: {}", basicExcel);
+           assertNotNull(basicExcel.getNumber());
+           assertNotNull(basicExcel.getStr());
+       }
+   
+       @Override
+       public void invokeHead(Map<Integer, CellData> headMap, AnalysisContext context) {
+   
+       }
+   
+       @Override
+       public void post(AnalysisContext context, Map<?, ?> customMap) {
+   
+       }
+   }
+   
+   ```
+
+   该监听器需要绑定上面定义的目标模型，其中`TypeMappingListener`抽象监听器，会**自动过滤不属于该泛型类型的结果**。
+
+4. 处理解析结果
+
+   完成上述的`doInvoke`方法，处理最终的excel解析结果。
+
+#### 横向合并
+
+1. excel模板样例
+
+   ![horizontal-excel-template](doc/img/row-merge-template.png)
+
+2. 定义目标模型类
+
+   ```java
+   package org.nice.excel.model;
+   
+   import com.alibaba.excel.annotation.ExcelProperty;
+   import com.alibaba.excel.annotation.format.DateTimeFormat;
+   import lombok.Data;
+   import lombok.NoArgsConstructor;
+   import org.nice.excel.annotation.ExcelMerge;
+   import org.nice.excel.annotation.ExcelSort;
+   import org.nice.excel.converter.BigDecimalStringNumberConverter;
+   import org.nice.excel.enums.MergeEnum;
+   
+   import java.math.BigDecimal;
+   import java.util.Date;
+   import java.util.List;
+   
+   /**
+    * <p>
+    * 按行合并excel
+    * </p>
+    *
+    * @author WECENG
+    * @since 2021/7/5 10:28
+    */
+   @Data
+   @NoArgsConstructor
+   public class RowMergeExcel {
+   
+       @DateTimeFormat("yyyy-MM-dd")
+       @ExcelProperty(index = 0)
+       private Date date;
+   
+       @ExcelMerge(type = MergeEnum.ROW, rowStart = 1, rowEnd = 97)
+       @ExcelProperty(index = 2, converter = BigDecimalStringNumberConverter.class)
+       @ExcelSort(colIdx = 1)
+       private List<BigDecimal> dataList;
+   
+   }
+   
+   ```
+
+   横向合并需要使用`@ExcelMerge`注解，**类型type为`MergeEnum.ROW`，同时需要指定合并的开始行数（rowStart）和结束行数（rowEnd）,其中rowEnd是非必填的，如果不填则合并至最后一行**。同时如果使用合并，则需要**显示指定转换器**，例如：`BigDecimalStringNumberConvertor`，**不可用默认转换器。**
+
+3. 定义监听器
+
+   ```java
+   package org.nice.excel.listener;
+   
+   import cn.hutool.core.date.DateUtil;
+   import com.alibaba.excel.context.AnalysisContext;
+   import com.alibaba.excel.metadata.CellData;
+   import org.nice.excel.model.RowMergeExcel;
+   import org.slf4j.Logger;
+   import org.slf4j.LoggerFactory;
+   
+   import java.math.BigDecimal;
+   import java.util.Map;
+   
+   import static org.junit.jupiter.api.Assertions.assertEquals;
+   import static org.junit.jupiter.api.Assertions.assertTrue;
+   
+   /**
+    * <p>
+    * 按行合并excel监听器
+    * </p>
+    *
+    * @author WECENG
+    * @since 2021/7/5 10:35
+    */
+   public class RowMergeExcelListener extends TypeMappingListener<RowMergeExcel> {
+   
+       private final Logger log = LoggerFactory.getLogger(this.getClass());
+   
+       @Override
+       public void doInvoke(RowMergeExcel rowMergeExcel, AnalysisContext context, Map<?,?> customMap) {
+           log.info("成功解析: {}", rowMergeExcel);
+           assertTrue(DateUtil.isSameDay(rowMergeExcel.getDate(), DateUtil.parse("2021-04-26", "yyyy-MM-dd")));
+           assertEquals(96, rowMergeExcel.getDataList().size());
+           //assert sort
+           assertEquals(rowMergeExcel.getDataList().get(0), BigDecimal.valueOf(1536.36));
+       }
+   
+       @Override
+       public void invokeHead(Map<Integer, CellData> headMap, AnalysisContext context) {
+   
+       }
+   
+       @Override
+       public void post(AnalysisContext context, Map<?, ?> customMap) {
+   
+       }
+   }
+   
+   ```
+
+   该监听器需要绑定上面定义的目标模型，其中`TypeMappingListener`抽象监听器，会**自动过滤不属于该泛型类型的结果**。
+
+4. 处理解析结果
+
+   完成上述的`doInvoke`方法，处理最终的excel解析结果。
+
+#### 纵向合并
+
+1. excel模板样例
+
+   ![vertical-excel-template](doc/img/col-merge-template.png)
+
+2. 定义目标模型类
+
+   ```java
+   package org.nice.excel.model;
+   
+   import com.alibaba.excel.annotation.ExcelProperty;
+   import lombok.Data;
+   import lombok.NoArgsConstructor;
+   import org.nice.excel.annotation.ExcelMerge;
+   import org.nice.excel.converter.BigDecimalStringNumberConverter;
+   import org.nice.excel.enums.MergeEnum;
+   
+   import java.math.BigDecimal;
+   import java.util.List;
+   
+   /**
+    * <p>
+    * 按列合并excel
+    * </p>
+    *
+    * @author WECENG
+    * @since 2021/7/20 10:37
+    */
+   @Data
+   @NoArgsConstructor
+   public class ColMergeExcel {
+   
+       private String name;
+   
+       @ExcelProperty(converter = BigDecimalStringNumberConverter.class)
+       @ExcelMerge(type = MergeEnum.COL, colStart = 1, colEnd = 97)
+       private List<BigDecimal> dataList;
+   
+   }
+   ```
+   
+   横向合并需要使用`@ExcelMerge`注解，**类型type为`MergeEnum.COL`，同时需要指定合并的开始列数（colStart）和结束列数（colEnd）**。同时如果使用合并，则需要**显示指定转换器**，例如：`BigDecimalStringNumberConvertor`，**不可用默认转换器**。
+   
+3. 定义监听器
+
+   ```java
+   package org.nice.excel.listener;
+   
+   import com.alibaba.excel.context.AnalysisContext;
+   import com.alibaba.excel.metadata.CellData;
+   import org.nice.excel.model.ColMergeExcel;
+   import org.slf4j.Logger;
+   import org.slf4j.LoggerFactory;
+   
+   import java.util.Map;
+   
+   import static org.junit.jupiter.api.Assertions.assertEquals;
+   
+   /**
+    * <p>
+    * 按列合并excel监听器
+    * </p>
+    *
+    * @author WECENG
+    * @since 2022/7/15 10:25
+    */
+   public class ColMergeExcelListener extends TypeMappingListener<ColMergeExcel>{
+   
+       private final Logger log = LoggerFactory.getLogger(this.getClass());
+   
+       @Override
+       public void doInvoke(ColMergeExcel colMergeExcel, AnalysisContext context, Map<?, ?> customMap) {
+           log.info("成功解析: {}", colMergeExcel);
+           assertEquals(96, colMergeExcel.getDataList().size());
+       }
+   
+       @Override
+       public void invokeHead(Map<Integer, CellData> headMap, AnalysisContext context) {
+       }
+   
+       @Override
+       public void post(AnalysisContext context, Map<?, ?> customMap) {
+   
+       }
+   
+   }
+   ```
+   
+   该监听器需要绑定上面定义的目标模型，其中`TypeMappingListener`抽象监听器，会**自动过滤不属于该泛型类型的结果**。
+   
+4. 处理解析结果
+
+   完成上述的`doInvoke`方法，处理最终的excel解析结果。
+
+#### 横纵双向合并
+
+1. excel模板样例
+
+   ![vertical-excel-template](doc/img/row-col-merge-template.png)
+
+2. 定义目标模型类
+
+   ```java
+   package org.nice.excel.model;
+   
+   import com.alibaba.excel.annotation.ExcelProperty;
+   import lombok.Data;
+   import lombok.NoArgsConstructor;
+   import org.nice.excel.annotation.ExcelMerge;
+   import org.nice.excel.converter.BigDecimalStringNumberConverter;
+   import org.nice.excel.enums.MergeEnum;
+   
+   import java.math.BigDecimal;
+   import java.util.List;
+   
+   /**
+    * <p>
+    * 行列合并excel
+    * </p>
+    *
+    * @author WECENG
+    * @since 2021/7/5 16:32
+    */
+   @Data
+   @NoArgsConstructor
+   public class RowColMergeExcel {
+   
+       @ExcelProperty(converter = BigDecimalStringNumberConverter.class)
+       @ExcelMerge(type = MergeEnum.ROW_COL, rowStart = 1, rowEnd = 5, colStart = 1, colEnd = 25)
+       private List<BigDecimal> dataList;
+   
+   }
+   
+   ```
+
+   横向合并需要使用`@ExcelMerge`注解，**类型type为MergeEnum.ROW_COL，同时需要指定合并的开始行数（rowStart）、结束行数（rowEnd）、开始列数（colStart）和结束列数（colEnd）**。同时如果使用合并，则需要**显示指定转换器**，例如：`BigDecimalStringNumberConvertor`，**不可用默认转换器**。
+
+3. 定义监听器
+
+   ```java
+   package org.nice.excel.listener;
+   
+   import com.alibaba.excel.context.AnalysisContext;
+   import com.alibaba.excel.metadata.CellData;
+   import org.nice.excel.model.RowColMergeExcel;
+   import org.slf4j.Logger;
+   import org.slf4j.LoggerFactory;
+   
+   import java.util.Map;
+   
+   import static org.junit.jupiter.api.Assertions.assertEquals;
+   import static org.junit.jupiter.api.Assertions.assertNotNull;
+   
+   /**
+    * <p>
+    * 行列合并excel监听器
+    * </p>
+    *
+    * @author WECENG
+    * @since 2021/7/5 16:35
+    */
+   public class RowColMergeExcelListener extends TypeMappingListener<RowColMergeExcel> {
+   
+       private final Logger log = LoggerFactory.getLogger(this.getClass());
+   
+       @Override
+       public void doInvoke(RowColMergeExcel rowColMergeExcel, AnalysisContext context, Map<?,?> customMap) {
+           log.info("成功解析: {}", rowColMergeExcel);
+           assertNotNull(rowColMergeExcel);
+           assertEquals(rowColMergeExcel.getDataList().size(), 96);
+       }
+   
+       @Override
+       public void invokeHead(Map<Integer, CellData> headMap, AnalysisContext context) {
+   
+       }
+   
+       @Override
+       public void post(AnalysisContext context, Map<?, ?> customMap) {
+   
+       }
+   }
+   ```
+
+   该监听器需要绑定上面定义的目标模型，其中`TypeMappingListener`抽象监听器，会**自动过滤不属于该泛型类型的结果**。
+
+4. 处理解析结果
+
+   完成上述的`doInvoke`方法，处理最终的excel解析结果。
+
+#### 多字段分组
+
+1. excel模板样例
+
+   ![group-by-excel-template](doc/img/group-by-excel-template.png)
+
+2. 定义目标模型类
+
+   ```java
+   package org.nice.excel.model;
+   
+   import com.alibaba.excel.annotation.ExcelProperty;
+   import com.alibaba.excel.annotation.format.DateTimeFormat;
+   import com.alibaba.excel.converters.string.StringStringConverter;
+   import lombok.Data;
+   import lombok.NoArgsConstructor;
+   import org.nice.excel.annotation.ExcelGroup;
+   import org.nice.excel.annotation.ExcelMerge;
+   import org.nice.excel.annotation.ExcelSort;
+   import org.nice.excel.converter.BigDecimalStringNumberConverter;
+   import org.nice.excel.enums.MergeEnum;
+   
+   import java.math.BigDecimal;
+   import java.util.Date;
+   import java.util.List;
+   
+   /**
+    * <p>
+    * 分组excel
+    * </p>
+    *
+    * @author WECENG
+    * @since 2021/7/5 14:23
+    */
+   @Data
+   @NoArgsConstructor
+   @ExcelGroup(fields = {"group1", "group2", "group3"})
+   public class GroupByExcel {
+   
+       @ExcelMerge(type = MergeEnum.ROW, rowStart = 1)
+       @ExcelProperty(index = 0)
+       private String group1;
+   
+       @ExcelProperty(index = 1)
+       @ExcelMerge(type = MergeEnum.ROW, rowStart = 1)
+       private String group2;
+   
+       @ExcelProperty(index = 2)
+       @DateTimeFormat("yyyy-MM-dd")
+       @ExcelMerge(type = MergeEnum.ROW, rowStart = 1)
+       private Date group3;
+   
+       @ExcelProperty(index = 4, converter = BigDecimalStringNumberConverter.class)
+       @ExcelMerge(type = MergeEnum.ROW, rowStart = 1)
+       private List<BigDecimal> dataList;
+   
+   }
+   ```
+
+   **分组需要使用`@ExcelGroup`注解，并指定分组字段。该指定的分组字段必须使用`@ExcelMerge`注解，明确需要使用哪些行数进行分组。**类型type为`MergeEnum.ROW`，同时需要指定合并的开始行数（rowStart）和结束行数（rowEnd）,其中rowEnd是非必填的，如果不填则合并至最后一行。同时如果使用合并，则需要显示指定转换器，例如：`BigDecimalStringNumberConvertor`，**不可用默认转换器**。
+
+3. 定义监听器
+
+   ```java
+   package org.nice.excel.listener;
+   
+   import com.alibaba.excel.context.AnalysisContext;
+   import com.alibaba.excel.metadata.CellData;
+   import org.assertj.core.util.Lists;
+   import org.nice.excel.model.GroupByExcel;
+   import org.slf4j.Logger;
+   import org.slf4j.LoggerFactory;
+   
+   import java.util.List;
+   import java.util.Map;
+   import java.util.stream.Collectors;
+   
+   import static org.junit.jupiter.api.Assertions.assertEquals;
+   import static org.junit.jupiter.api.Assertions.assertIterableEquals;
+   
+   /**
+    * <p>
+    * 分组excel监听器
+    * </p>
+    *
+    * @author WECENG
+    * @since 2021/7/5 14:45
+    */
+   public class GroupByExcelListener extends TypeMappingListener<List<GroupByExcel>> {
+   
+       private final Logger log = LoggerFactory.getLogger(this.getClass());
+   
+       @Override
+       public void doInvoke(List<GroupByExcel> groupByExcels, AnalysisContext context, Map<?, ?> customMap) {
+           log.info("成功解析: {}", groupByExcels);
+           assertEquals(8, groupByExcels.size());
+           assertIterableEquals(Lists.list(2, 2, 2, 2, 2, 2, 2, 2),
+                   groupByExcels.stream().map(GroupByExcel::getDataList).map(List::size).collect(Collectors.toList()));
+       }
+   
+       @Override
+       public void invokeHead(Map<Integer, CellData> headMap, AnalysisContext context) {
+   
+       }
+   
+       @Override
+       public void post(AnalysisContext context, Map<?, ?> customMap) {
+   
+       }
+   }
+   ```
+
+   该监听器需要绑定上面定义的目标模型，其中`TypeMappingListener`抽象监听器，会**自动过滤不属于该泛型类型的结果**。
+
+   **注意：分组后的接收结果数据，必须是List。例如：List<DataBootOff>**
+
+4. 处理解析结果
+
+   完成上述的`doInvoke`方法，处理最终的excel解析结果。
+
+#### 排序
+
+1. excel模板样例
+
+   ![group-by-excel-template](doc/img/sort.png)
+
+2. 定义目标模型类
+
+   ```java
+   package org.nice.excel.model;
+   
+   import com.alibaba.excel.annotation.ExcelProperty;
+   import com.alibaba.excel.annotation.format.DateTimeFormat;
+   import lombok.Data;
+   import lombok.NoArgsConstructor;
+   import org.nice.excel.annotation.ExcelMerge;
+   import org.nice.excel.annotation.ExcelSort;
+   import org.nice.excel.converter.BigDecimalStringNumberConverter;
+   import org.nice.excel.enums.MergeEnum;
+   
+   import java.math.BigDecimal;
+   import java.util.Date;
+   import java.util.List;
+   
+   /**
+    * <p>
+    * 按行合并excel
+    * </p>
+    *
+    * @author WECENG
+    * @since 2021/7/5 10:28
+    */
+   @Data
+   @NoArgsConstructor
+   public class SortExcel {
+   
+       @DateTimeFormat("yyyy-MM-dd")
+       @ExcelProperty(index = 0)
+       private Date date;
+   
+       @ExcelMerge(type = MergeEnum.ROW, rowStart = 1, rowEnd = 97)
+       @ExcelProperty(index = 2, converter = BigDecimalStringNumberConverter.class)
+       @ExcelSort(colIdx = 1)
+       private List<BigDecimal> dataList;
+   
+   }
+   ```
+
+   **排序需要使用`@ExcelSort注解`**，属性`colIdx`指定按照某一列的顺序进行排序。例如`colIdx=1`，即按照第二列（时间）的顺序对第三列（出力）进行排序。最终（出力）列的顺序会对应（时间）列从`00:15-24:00`的顺序排序。
+
+3. 定义监听器
+
+
+```java
+package org.nice.excel.listener;
+
+import cn.hutool.core.date.DateUtil;
+import com.alibaba.excel.context.AnalysisContext;
+import com.alibaba.excel.metadata.CellData;
+import org.nice.excel.model.RowMergeExcel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.math.BigDecimal;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * <p>
+ * 按行合并excel监听器
+ * </p>
+ *
+ * @author WECENG
+ * @since 2021/7/5 10:35
+ */
+public class RowMergeExcelListener extends TypeMappingListener<RowMergeExcel> {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    @Override
+    public void doInvoke(RowMergeExcel rowMergeExcel, AnalysisContext context, Map<?,?> customMap) {
+        log.info("成功解析: {}", rowMergeExcel);
+        assertTrue(DateUtil.isSameDay(rowMergeExcel.getDate(), DateUtil.parse("2021-04-26", "yyyy-MM-dd")));
+        assertEquals(96, rowMergeExcel.getDataList().size());
+        //assert sort
+        assertEquals(rowMergeExcel.getDataList().get(0), BigDecimal.valueOf(1536.36));
+    }
+
+    @Override
+    public void invokeHead(Map<Integer, CellData> headMap, AnalysisContext context) {
+
+    }
+
+    @Override
+    public void post(AnalysisContext context, Map<?, ?> customMap) {
+
+    }
+}
+```
+
+​    该监听器需要绑定上面定义的目标模型，其中`TypeMappingListener`抽象监听器，会**自动过滤不属于该泛型类型的结果**。
+
+4. 处理解析结果
+
+​			完成上述的`doInvoke`方法，处理最终的excel解析结果。
+
+#### 分组后合并
+
+1. excel模板样例
+
+   ![group-by-excel-template](doc/img/colGroupMerge.png)
+
+2. 定义目标模型类
+
+   ```java
+   package org.nice.excel.model;
+   
+   import com.alibaba.excel.annotation.ExcelProperty;
+   import lombok.Data;
+   import lombok.NoArgsConstructor;
+   import org.nice.excel.annotation.ExcelGroup;
+   import org.nice.excel.annotation.ExcelMerge;
+   import org.nice.excel.converter.BigDecimalStringNumberConverter;
+   import org.nice.excel.enums.MergeEnum;
+   
+   import java.math.BigDecimal;
+   import java.util.List;
+   
+   /**
+    * <p>
+    * 日前断面阻塞
+    * </p>
+    *
+    * @author WECENG
+    * @since 2023/3/7 09:58
+    */
+   @Data
+   @NoArgsConstructor
+   @ExcelGroup(fields = {"group"}, fill = true)
+   public class ColGroupMerge {
+   
+       @ExcelProperty(index = 0)
+       @ExcelMerge(type = MergeEnum.ROW, rowStart = 1)
+       private String group;
+   
+       @ExcelProperty(index = 2, converter = BigDecimalStringNumberConverter.class)
+       @ExcelMerge(type = MergeEnum.COL, colStart = 2, colEnd = 26, colGroup = true)
+       private List<BigDecimal> dataList;
+   
+   }
+   ```
+
+   **分组需要使用`@ExcelGroup`注解，并指定分组字段，fill属性设置为true会给多个cell单元各合并后填充所有cell的值。该指定的分组字段必须使用`@ExcelMerge`注解，明确需要使用哪些行数进行分组。**类型type为`MergeEnum.COL`，同时需要指定合并的开始列数（co lStart）和结束列数（colEnd）以及**(colGroup)设置成true**表示要先进行分组后进行列合并。
+
+3. 定义监听器
+
+   ```java
+   package org.nice.excel.listener;
+   
+   import com.alibaba.excel.context.AnalysisContext;
+   import org.nice.excel.model.ColGroupMerge;
+   import org.slf4j.Logger;
+   import org.slf4j.LoggerFactory;
+   
+   import java.util.List;
+   import java.util.Map;
+   
+   import static org.junit.jupiter.api.Assertions.assertEquals;
+   
+   /**
+    * <p>
+    * 分组后合并监听器
+    * </p>
+    *
+    * @author WECENG
+    * @since 2021/7/5 16:26
+    */
+   public class ColGroupMergeListener extends TypeMappingListener<List<ColGroupMerge>> {
+   
+       private final Logger log = LoggerFactory.getLogger(this.getClass());
+   
+       @Override
+       public void doInvoke(List<org.nice.excel.model.ColGroupMerge> colGroupMergeList, AnalysisContext context, Map<?, ?> customMap) {
+           log.info("成功解析: {}", colGroupMergeList);
+           assertEquals(colGroupMergeList.get(0).getDataList().size(), 96);
+       }
+   
+   
+       @Override
+       public void post(AnalysisContext context, Map<?, ?> customMap) {
+   
+       }
+   
+       @Override
+       public void onException(Exception exception, AnalysisContext context) throws Exception {
+           super.onException(exception, context);
+       }
+   }
+   ```
+
+4. 处理解析结果
+
+   完成上述的`doInvoke`方法，处理最终的excel解析结果。
+
+#### processor使用
+
+​	`ExcelProcessor`接口提供了两个实现类`DefaultExcelProcessor`和`CompressExcelProcessor`，其中`DefaultExcelProcessor`为默认excel文件处理器，`CompressExcelProcessor`为压缩包的excel文件处理器，可处理的文件格式包括:**xls**、**xlsx**、**zip**、**rar(旧版)** 。
+
+1. `ExcelProcessor`接口方法列表
+
+   ```java
+   package com.tsintergy.pps.excel;
+   
+   import com.alibaba.excel.context.AnalysisContext;
+   import com.alibaba.excel.event.AnalysisEventListener;
+   import com.alibaba.excel.read.listener.ReadListener;
+   import com.tsintergy.pps.excel.listener.TypeMappingListener;
+   
+   import java.io.InputStream;
+   import java.util.List;
+   import java.util.Map;
+   
+   /**
+    * <p>
+    * excel处理器
+    * </p>
+    *
+    * @author WECENG
+    * @since 2021/7/6 11:02
+    */
+   public interface ExcelProcessor {
+   
+       /**
+        * excel解析
+        *
+        * @param in           io stream
+        * @param target       目标模型
+        * @param listenerList 结果监听器集合
+        * @see com.tsintergy.pps.excel.listener.TypeMappingListener
+        */
+       void execute(InputStream in, Class<?> target, List<TypeMappingListener<?>> listenerList);
+   
+       /**
+        * excel解析
+        *
+        * @param in           io stream
+        * @param target       目标模型
+        * @param listenerList 监听器集合
+        * @param customMap    This object can be read in the Listener {@link AnalysisEventListener#invoke(Object, AnalysisContext)}
+        *                     {@link AnalysisContext#getCustom()}
+        * @see com.tsintergy.pps.excel.listener.TypeMappingListener
+        */
+       void execute(InputStream in, Class<?> target, List<TypeMappingListener<?>> listenerList, Map<Object, Object> customMap);
+   
+       /**
+        * excel解析
+        *
+        * @param in       io stream
+        * @param target   目标模型
+        * @param listener 结果监听器
+        */
+       void execute(InputStream in, Class<?> target, ReadListener<?> listener);
+   
+       /**
+        * excel解析
+        *
+        * @param in        io stream
+        * @param target    目标模型
+        * @param listener  结果监听器
+        * @param customMap This object can be read in the Listener {@link AnalysisEventListener#invoke(Object, AnalysisContext)}
+        *                  {@link AnalysisContext#getCustom()}
+        */
+       void execute(InputStream in, Class<?> target, ReadListener<?> listener, Map<Object, Object> customMap);
+   
+       /**
+        * excel解析
+        *
+        * @param in        io stream
+        * @param target    目标模型
+        * @param listener  结果监听器
+        * @param customMap This object can be read in the Listener {@link AnalysisEventListener#invoke(Object, AnalysisContext)}
+        *                  {@link AnalysisContext#getCustom()}
+        * @param sheetName sheet名称
+        */
+       void execute(InputStream in, Class<?> target, ReadListener<?> listener, Map<Object, Object> customMap, String sheetName);
+   
+       /**
+        * excel解析
+        *
+        * @param in        io stream
+        * @param target    目标模型
+        * @param listener  结果监听器
+        * @param customMap This object can be read in the Listener {@link AnalysisEventListener#invoke(Object, AnalysisContext)}
+        *                  {@link AnalysisContext#getCustom()}
+        * @param sheetName sheet名称
+        * @param rowNum 总行数
+        */
+       void execute(InputStream in, Class<?> target, ReadListener<?> listener, Map<Object, Object> customMap, String sheetName, Integer rowNum);
+   
+       /**
+        * excel解析
+        *
+        * @param fileName      文件名称
+        * @param in            io stream
+        * @param modelFunction 获取目标模型
+        * @param listenerList  结果监听器集合
+        * @see com.tsintergy.pps.excel.listener.TypeMappingListener
+        */
+       void execute(String fileName, InputStream in, ModelFunction modelFunction, List<TypeMappingListener<?>> listenerList);
+   
+       /**
+        * excel解析
+        *
+        * @param fileName      文件名称
+        * @param in            io stream
+        * @param modelFunction 获取目标模型
+        * @param listenerList  监听器集合
+        * @param customMap     This object can be read in the Listener {@link AnalysisEventListener#invoke(Object, AnalysisContext)}
+        *                      {@link AnalysisContext#getCustom()}
+        * @see com.tsintergy.pps.excel.listener.TypeMappingListener
+        */
+       void execute(String fileName, InputStream in, ModelFunction modelFunction, List<TypeMappingListener<?>> listenerList, Map<Object, Object> customMap);
+   
+       /**
+        * excel解析
+        *
+        * @param fileName         文件名称
+        * @param in               io stream
+        * @param modelFunction    目标模型
+        * @param listenerFunction 结果监听器
+        */
+       void execute(String fileName, InputStream in, ModelFunction modelFunction, ListenerFunction listenerFunction);
+   
+       /**
+        * excel解析
+        *
+        * @param fileName         文件名称
+        * @param in               io stream
+        * @param modelFunction    目标模型
+        * @param listenerFunction 结果监听器
+        * @param customMap        This object can be read in the Listener {@link AnalysisEventListener#invoke(Object, AnalysisContext)}
+        *                         {@link AnalysisContext#getCustom()}
+        */
+       void execute(String fileName, InputStream in, ModelFunction modelFunction, ListenerFunction listenerFunction, Map<Object, Object> customMap);
+   
+       /**
+        * excel解析
+        *
+        * @param fileName         文件名称
+        * @param in               io stream
+        * @param modelFunction    目标模型
+        * @param listenerFunction 结果监听器
+        * @param customFunction   自定义解析
+        * @param customMap        This object can be read in the Listener {@link AnalysisEventListener#invoke(Object, AnalysisContext)}
+        *                         {@link AnalysisContext#getCustom()}
+        */
+       void execute(String fileName, InputStream in, ModelFunction modelFunction, ListenerFunction listenerFunction, CustomFunction customFunction, Map<Object, Object> customMap);
+   
+       /**
+        * excel解析
+        *
+        * @param fileName         文件名称
+        * @param in               io stream
+        * @param modelFunction    目标模型
+        * @param listenerFunction 结果监听器
+        * @param customFunction   自定义解析
+        * @param sheetFunction    sheet名称解析
+        * @param customMap        This object can be read in the Listener {@link AnalysisEventListener#invoke(Object, AnalysisContext)}
+        *                         {@link AnalysisContext#getCustom()}
+        */
+       void execute(String fileName, InputStream in, ModelFunction modelFunction, ListenerFunction listenerFunction, SheetFunction sheetFunction, CustomFunction customFunction, Map<Object, Object> customMap);
+   
+   
+       /**
+        * excel解析
+        *
+        * @param fileName         文件名称
+        * @param in               io stream
+        * @param modelFunction    目标模型
+        * @param listenerFunction 结果监听器
+        * @param sheetFunction    sheet名称解析
+        * @param rowNumFunction   总行数解析
+        * @param customFunction   自定义解析
+        * @param customMap        This object can be read in the Listener {@link AnalysisEventListener#invoke(Object, AnalysisContext)}
+        *                         {@link AnalysisContext#getCustom()}
+        */
+       void execute(String fileName, InputStream in, ModelFunction modelFunction, ListenerFunction listenerFunction, SheetFunction sheetFunction, RowNumFunction rowNumFunction, CustomFunction customFunction, Map<Object, Object> customMap);
+   
+   }
+   
+   ```
+
+2. 使用示例
 
 ​			下面以` void execute(String fileName, InputStream in, ModelFunction modelFunction, ListenerFunction listenerFunction, SheetFunction sheetFunction, RowNumFunction rowNumFunction, CustomFunction customFunction, Map<Object, Object> customMap);`方法作为使用示例。
 

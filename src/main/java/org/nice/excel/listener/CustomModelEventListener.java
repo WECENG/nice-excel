@@ -39,6 +39,9 @@ public class CustomModelEventListener extends ModelBuildEventListener {
 
     private final Map<Integer, Map<Integer, CellData>> cache = new HashMap<>(8);
 
+    private final List<List<Object>> groupCache = new ArrayList<>();
+
+
     private Integer totalRow;
 
     public CustomModelEventListener() {
@@ -79,8 +82,8 @@ public class CustomModelEventListener extends ModelBuildEventListener {
         if (!CollectionUtils.isEmpty(cache) && context.readRowHolder().getRowIndex() + 1 != totalRow) {
             return null;
         }
-        reset();
         List<Object> dataGroupBy = dealDataGroupBy(excelReadHeadProperty, fieldMap, context);
+        reset();
         if (!CollectionUtils.isEmpty(dataGroupBy)) {
             return dataGroupBy;
         }
@@ -102,6 +105,7 @@ public class CustomModelEventListener extends ModelBuildEventListener {
      */
     private void reset() {
         cache.clear();
+        groupCache.clear();
         totalRow = null;
     }
 
@@ -123,6 +127,9 @@ public class CustomModelEventListener extends ModelBuildEventListener {
                 Object fieldVal = fieldMap.get(field);
                 if (Objects.nonNull(fieldVal) && fieldVal instanceof List) {
                     List<Object> fieldValList = (List) fieldVal;
+                    if (excelGroup.fill()) {
+                        ConvertUtil.fillPreNullable(fieldValList);
+                    }
                     Map<Integer, Object> valMap = new HashMap(8);
                     for (int i = 0; i < fieldValList.size(); i++) {
                         valMap.put(i, fieldValList.get(i));
@@ -159,7 +166,9 @@ public class CustomModelEventListener extends ModelBuildEventListener {
                 groupIdxList.forEach(itemIdxList -> {
                     Map<String, Object> itemMap = new HashMap<>(8);
                     fieldMap.forEach((k, v) -> {
-                        itemMap.put(k, ConvertUtil.matchData(itemIdxList, (List) v));
+                        if (v instanceof List) {
+                            itemMap.put(k, ConvertUtil.matchData(itemIdxList, (List) v));
+                        }
                     });
                     groupMapList.add(itemMap);
                 });
@@ -240,7 +249,12 @@ public class CustomModelEventListener extends ModelBuildEventListener {
                                 context.readRowHolder().getRowIndex(), i);
                         colList.add(value);
                     }
-                    fieldMap.put(excelContentProperty.getField().getName(), colList);
+                    if (excelMerge.colGroup()) {
+                        groupCache.add(colList);
+                        fieldMap.put(excelContentProperty.getField().getName(), groupCache);
+                    } else {
+                        fieldMap.put(excelContentProperty.getField().getName(), colList);
+                    }
                     break;
                 case ROW:
                     cache.put(context.readRowHolder().getRowIndex(), cellDataMap);
